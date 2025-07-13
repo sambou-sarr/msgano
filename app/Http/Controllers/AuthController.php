@@ -43,22 +43,32 @@ class AuthController extends Controller
 
     // Traiter la connexion
     public function login(Request $request)
-    {
-        $credentials = $request->validate([
-            'username' => 'required|string',
-            'password' => 'required|string',
-        ]);
+{
+    $credentials = $request->validate([
+        'username' => 'required|string',
+        'password' => 'required|string',
+    ]);
 
-        if (Auth::attempt($credentials)) {
-            $request->session()->regenerate();
+    // Vérifie d'abord si un utilisateur avec ce username existe
+    $user = \App\Models\User::where('username', $credentials['username'])->first();
 
-            return redirect()->intended(route('dashboard'));
-        }
-
+    if (!$user) {
         return back()->withErrors([
-            'username' => 'Identifiants invalides.',
+            'username' => 'Aucun compte trouvé avec ce nom d’utilisateur. Veuillez vous inscrire.',
         ]);
     }
+
+    // Tente la connexion
+    if (Auth::attempt($credentials)) {
+        $request->session()->regenerate();
+        return redirect()->intended(route('dashboard'));
+    }
+
+    return back()->withErrors([
+        'username' => 'Mot de passe incorrect.',
+    ]);
+}
+
 
     // Déconnexion
     public function logout(Request $request)
