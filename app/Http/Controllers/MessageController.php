@@ -25,11 +25,17 @@ class MessageController extends Controller
         'body' => 'required|string|max:2000',
     ]);
 
-    $message = new Message();
-    $message->user_id = $user->id;
-    $message->body = $request->input('body');
-    $message->sender_ip = $request->ip();
-    $message->sender_agent = $request->header('User-Agent');
+$message = new Message();
+$message->user_id = $user->id;
+$message->body = $request->input('body');
+
+// Récupération de la vraie IP
+$ipAddress = $request->header('X-Forwarded-For') 
+            ? explode(',', $request->header('X-Forwarded-For'))[0] 
+            : $request->ip();
+
+$message->sender_ip = trim($ipAddress);
+$message->sender_agent = $request->header('User-Agent');
 
     // Exemple de géolocalisation IP via API externe
     $response = Http::get("http://ip-api.com/json/{$message->sender_ip}");
